@@ -4,11 +4,12 @@
 Ansible Role - Docker for Ubuntu.
 
 ## Requirements
-This role requires Ansible 2.0 or higher, and platform requirements are listed in the metadata file.
+This role requires Ansible 2.1 or higher, and platform requirements are listed in the metadata file.
 
 ## Supported Distributions
 - Ubuntu 14.04 (Trusty Tahr)
 - Ubuntu 16.04 (Xenial Xerus)
+- Ubuntu 17.04 (Zesty Zapus)
 
 ## Install and configure Docker.
 
