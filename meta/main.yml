@@ -1,0 +1,19 @@
+galaxy_info:
+    author: rlunar
+    description: Docker for Ubuntu Linux Server
+    license: license (MIT)
+    min_ansible_version: 2.0
+    platforms:
+        - name: Ubuntu
+          versions:
+            - trusty
+            - xenial
+    galaxy_tags:
+        - system
+        - server
+        - development
+        - docker
+        - ubuntu
+        - linux
+
+dependencies: []

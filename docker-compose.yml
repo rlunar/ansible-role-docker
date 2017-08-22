@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+    ubuntu14:
+        image: rlunar/ansible:ubuntu14-latest
+        volumes:
+            - .:/etc/ansible/roles/ansible-role-docker
+    ubuntu16:
+        image: rlunar/ansible:ubuntu16-latest
+        volumes:
+            - .:/etc/ansible/roles/ansible-role-docker

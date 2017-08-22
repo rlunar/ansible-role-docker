@@ -1,0 +1,27 @@
+#!/bin/sh
+
+role=ansible-role-docker
+
+while [ $# -gt 0 ]; do
+    arg=$1
+
+    case $arg in
+        start)
+            docker-compose up --build --force-recreate -d
+        ;;
+        test)
+            docker-compose exec ubuntu14 ansible-playbook -i 'localhost,' -c local /etc/ansible/roles/$role/tests/test.yml --syntax-check
+            docker-compose exec ubuntu16 ansible-playbook -i 'localhost,' -c local /etc/ansible/roles/$role/tests/test.yml --syntax-check
+        ;;
+        ubuntu14)
+            docker-compose exec ubuntu14 ansible-playbook -i 'localhost,' -c local /etc/ansible/roles/$role/tests/test.yml
+        ;;
+        ubuntu16)
+            docker-compose exec ubuntu16 ansible-playbook -i 'localhost,' -c local /etc/ansible/roles/$role/tests/test.yml
+        ;;
+        stop)
+            docker-compose stop
+        ;;
+    esac
+    shift
+done

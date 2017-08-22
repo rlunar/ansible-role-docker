@@ -1,0 +1,61 @@
+---
+- name: include os variables
+  include_vars: "{{docker_os}}.yml"
+  when: docker_os is defined and docker_os != ""
+
+################################################################################################
+
+# Define OS Variables
+
+- name: define docker_repo
+  set_fact:
+    docker_repo: "{{__docker_repo}}"
+  when: docker_repo is not defined
+
+################################################################################################
+
+# Install Docker and tools
+
+- name: install packages
+  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+
+- name: add the gpg key
+  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+
+- name: add apt repository
+  apt_repository: repo='{{docker_repo}}' state=present
+
+- name: install docker
+  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
+  with_items:
+    - docker-engine
+
+- name: check kernel (system) for correct docker-compose installation
+  shell: echo $(uname -s)
+  register: docker_compose_uname_kernel_system
+  changed_when: False
+
+- name: check kernel (system) for correct docker-compose installation
+  shell: echo $(uname -m)
+  register: docker_compose_uname_kernel_machine
+  changed_when: False
+
+- name: download docker-compose release
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{docker_compose_version}}/docker-compose-{{docker_compose_uname_kernel_system.stdout}}-{{docker_compose_uname_kernel_machine.stdout}}"
+    dest: /usr/local/bin/docker-compose
+    mode: 0755
+
+- name: install python docker essentials
+  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
+  when: docker_install_docker_python == "yes"
+  with_items:
+    - python-pip
+
+- name: install pip docker
+  when: docker_install_docker_python == "yes"
+  pip:
+    name: docker
