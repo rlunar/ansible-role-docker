@@ -1,61 +1,59 @@
 ---
-- name: include os variables
-  include_vars: "{{docker_os}}.yml"
-  when: docker_os is defined and docker_os != ""
 
-################################################################################################
+- include: "os/{{ ansible_os_family }}.yml"
 
-# Define OS Variables
+- include: "install.yml"
 
-- name: define docker_repo
-  set_fact:
-    docker_repo: "{{__docker_repo}}"
-  when: docker_repo is not defined
+- name: ensure config folder is present
+  file:
+    path: /etc/docker
+    state: directory
 
-################################################################################################
-
-# Install Docker and tools
-
-- name: install packages
-  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
-  with_items:
-    - apt-transport-https
-    - ca-certificates
-
-- name: add the gpg key
-  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
-
-- name: add apt repository
-  apt_repository: repo='{{docker_repo}}' state=present
-
-- name: install docker
-  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
-  with_items:
-    - docker-engine
-
-- name: check kernel (system) for correct docker-compose installation
-  shell: echo $(uname -s)
-  register: docker_compose_uname_kernel_system
-  changed_when: False
-
-- name: check kernel (system) for correct docker-compose installation
-  shell: echo $(uname -m)
-  register: docker_compose_uname_kernel_machine
-  changed_when: False
-
-- name: download docker-compose release
-  get_url:
-    url: "https://github.com/docker/compose/releases/download/{{docker_compose_version}}/docker-compose-{{docker_compose_uname_kernel_system.stdout}}-{{docker_compose_uname_kernel_machine.stdout}}"
-    dest: /usr/local/bin/docker-compose
-    mode: 0755
-
-- name: install python docker essentials
-  apt: pkg={{item}} state=present update_cache=yes cache_valid_time=3600
-  when: docker_install_docker_python == "yes"
-  with_items:
-    - python-pip
-
-- name: install pip docker
-  when: docker_install_docker_python == "yes"
+- name: ensure docker-py module is installed
   pip:
+    name: docker-py
+    version: 1.9.0
+  when: dockerpy
+
+- name: apply default daemon config
+  set_fact:
+    docker_json: "{{ default_docker_config | combine(docker_config | default({})) }}"
+
+- name: configure docker clusterstore
+  set_fact:
+    docker_json: '{{ docker_json | combine({"cluster-store": "consul://{{ consul_ip }}:8500"})}}'
+  when: docker_clusterstore
+
+- name: ensure daemon config file is present
+  template:
+    src: daemon.j2.json
+    dest: /etc/docker/daemon.json
+  notify:
+    - restart docker
+
+- name: ensure unit file folder is present
+  file:
+    path: /usr/lib/systemd/system
+    state: directory
+
+- name: ensure unit file is present & up to date
+  template:
+    src: docker.j2.service
+    dest: /usr/lib/systemd/system/docker.service
+  notify:
+    - reload unit
+    - restart docker
+
+- meta: flush_handlers
+
+- name: ensure starts on system boot
+  service:
     name: docker
+    enabled: yes
+
+- name: ensure vagrant user can run docker commands
+  user:
+    name: vagrant
+    groups: docker
+    append: yes
+  when: vagrant

@@ -1,5 +1,17 @@
 ---
-docker_compose_version: "1.14.0"
+consul_ip: 127.0.0.1
+docker_clusterstore: no
+dockerpy: no
+vagrant: no
+default_docker_config:
+    storage-driver: devicemapper
+    log-level: info
 
-# values can be: yes, no
-docker_install_docker_python: "yes"
+docker_version: "17.06"
+setup_script_url: "https://releases.rancher.com/install-docker/{{ docker_version }}.sh"
+
+# DANGER! THIS VALUE IS USED TO VERIFY THAT THE DOCKER SETUP SCRIPT IS LEGITIMATE. 
+# DO NOT MODIFY THIS UNLESS YOU HAVE SPECIFIED A DIFFERENT "docker_version" or "setup_script_url"
+# IF YOU HAVE GENERATED AN MD5 CHECKSUM FOR YOUR DESIRED SETUP SCRIPT, STORE IT IN THIS VARIABLE
+# IF YOU REALLY DON'T WANT TO VERIFY CHECKSUM, SET THIS VALUE TO "false" or "no"
+setup_script_md5_sum: "063022bc35d9946215e05b833b53561b"
